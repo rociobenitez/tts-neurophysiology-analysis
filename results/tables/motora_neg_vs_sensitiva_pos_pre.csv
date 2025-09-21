@@ -1,0 +1,7 @@
+metrica,n_plantar_medial,n_plantar_lateral,n_baxter
+n_eligibles_total,62.0,62.0,62.0
+n_sens_pos,22.0,21.0,7.0
+%_sens_pos_sobre_eligibles,35.48,33.87,11.29
+n_valid_total,27.0,24.0,7.0
+n_valid_dch,15.0,13.0,3.0
+n_valid_izq,12.0,11.0,4.0
