@@ -82,7 +82,8 @@ pip-sync requirements.txt
 ### 2) Kernel de Jupyter (opcional si usas Jupyter clásico)
 
 ```bash
-python -m ipykernel install --user --name=tts-neurophysiology-analysis
+python -m pip install ipykernel
+python -m ipykernel install --user --name tts-neuro --display-name "Python (tts-neuro)"
 ```
 
 ### 3) Ejecutar notebooks en orden
