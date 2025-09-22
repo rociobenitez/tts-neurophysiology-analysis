@@ -1,4 +1,4 @@
-# Estudio de investigación - Síndrome del túnel del tarso (Clínica Vitruvio)
+# Neurophysiology analysis for Tarsal Tunnel Syndrome
 
 Este proyecto realiza un análisis estadístico de estudios de **neurofisiología** en pacientes con **Síndrome del Túnel del Tarso** para investigación y publicaciones científicas.
 
