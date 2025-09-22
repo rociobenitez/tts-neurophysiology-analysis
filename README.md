@@ -1,6 +1,6 @@
 # Estudio de investigación - Síndrome del túnel del tarso (Clínica Vitruvio)
 
-Este proyecto tiene como objetivo realizar un análisis estadístico de los estudios de neurofisiología de pacientes con Síndrome del túnel del tarso de la Clínica Vitruvio en Madrid para estudios de investigación y publicaciones científicas.
+Este proyecto realiza un análisis estadístico de estudios de **neurofisiología** en pacientes con **Síndrome del Túnel del Tarso** para investigación y publicaciones científicas.
 
 ## Alcance y objetivos
 
@@ -11,13 +11,13 @@ Este proyecto tiene como objetivo realizar un análisis estadístico de los estu
 - **Muestra actual**: 74 estudios (pies); 49 pacientes
 - **Privacidad**: Datos anonimizados, sin información personal identificable
 
-Nota: revisar los pacientes con tts 0: si el paciente tiene 0 pero no tiene datos neurofisiológicos es porque no se ha estudiado ese pie en consulta, pero si tiene 0 y datos neurofisiológicos es porque se ha estudiado y no tiene tts.
+> Nota: revisar los pacientes con `tts=0`. Si `tts=0` y no hay datos neurofisiológicos → ese pie no se estudió en consulta. Si `tts=0` **y** hay datos → se estudió y no tiene TTS.
 
 ### Hipótesis principales
 
 1. **H1 — Mejora pre→post** en parámetros neurofisiológicos (pares apareados por pie).
 2. **H2 — Falsos negativos:** pies con **velocidad total normal** (≥ 45) y **velocidad segmentaria patológica** (< 45).
-3. **H3 - Motora vs sensitiva:** Si es negativa (>= 45) en motora, ¿cómo es la velocidad en sensitiva? Si la velocidad sensitiva es positiva, tiene un TTS.
+3. **H3 — Motora vs sensitiva:** si la **motora total** es normal (≥ 45), ¿hay positividad sensitiva (< 45) por nervio?
 4. **H4 — Asociación** entre diagnóstico TTS (por lado) y parámetros neurofisiológicos.
 
 > **Nota de unidades y formatos**
@@ -26,11 +26,12 @@ Nota: revisar los pacientes con tts 0: si el paciente tiene 0 pero no tiene dato
 > - Decimales con coma (ej.: `41,5`).
 > - Diagnósticos/comorbilidades: `0 = negativo`, `1 = positivo`, `NA` posible.
 > - Δ = post − pre. Δ > 0 = mejora (más velocidad tras cirugía).
+> - Umbral de normalidad velocidad: **45 m/s**
 
 ## Estructura del proyecto
 
 ```
-clinical_study_vitruvio/
+tts-neurophysiology-analysis/
 ├─ data/
 │  ├─ raw/        # CSV original (privado)
 │  └─ processed/  # Datos limpios/derivados para análisis
@@ -52,6 +53,51 @@ clinical_study_vitruvio/
 └─ README.md
 ```
 
+## Requisitos
+
+- Python 3.12+
+- Jupyter Notebook
+- Pandas, NumPy, Matplotlib, Seaborn
+- SciPy, Pingouin
+- (Opcional) Statsmodels
+
+## Cómo reproducir
+
+**Sin datos** no se ejecutarán los notebooks. Coloca el CSV en `data/raw/` con el nombre esperado por `notebooks/01_qa_validacion.ipynb` (variable `CSV_NAME`). Los datos **no** se versionan.
+
+### 1) Crear entorno y dependencias (pip-tools)
+
+```bash
+python -m venv .venv
+# Linux/macOS
+source .venv/bin/activate
+# Windows PowerShell
+# .\.venv\Scripts\Activate.ps1
+
+python -m pip install --upgrade pip pip-tools
+pip-compile --generate-hashes -o requirements.txt requirements.in
+pip-sync requirements.txt
+```
+
+### 2) Kernel de Jupyter (opcional si usas Jupyter clásico)
+
+```bash
+python -m ipykernel install --user --name=tts-neurophysiology-analysis
+```
+
+### 3) Ejecutar notebooks en orden
+
+1. Abre los notebooks en orden:
+
+- `01_qa_validacion.ipynb` → genera `data/processed/estudios_validado.parquet` y `results/summary_qa.md`.
+- `02_eda_descriptivo.ipynb` _(pendiente)_
+- `03_tests_inferencia.ipynb` _(pendiente)_
+- `04_figuras_tablas_publicacion.ipynb` _(pendiente)_
+
+2. Los resultados se guardan en `results/tables/*.csv` y `results/figures/*.png`.
+
+> Si cambias el nombre del fichero en `data/raw/`, actualiza CSV_NAME en `01_qa_validacion.ipynb`.
+
 ## Variables principales
 
 - Diagnóstico por lado: `tts_pie_derecho`, `tts_pie_izquierdo` (0/1).
@@ -64,31 +110,22 @@ clinical_study_vitruvio/
 
 - **QA/Validación:** tipos, fechas (day-first), coma decimal→punto, duplicados, NA, rangos fisiológicos.
 - **Descriptivo:** distribución de parámetros por lado y tiempo (pre/post).
-- **H1:** demostrar estadísticamente si, en promedio, hay mejoría tras la cirugía en cada métrica (velocidad total y segmentaria, pie dcho/izq).
-  - Pruebas pareadas (t pareada o Wilcoxon)
-  - Cuantificar tamaño del efecto (Cohen’s d o r de Wilcoxon)
+- **H1:** mejora pre→post (t pareada o Wilcoxon) + tamaño del efecto (Cohen’s dz); corrección BH-FDR.
 - **H2:** flag de “posible falso negativo” por pie; conteos y %.
-- **H3:** asociación TTS (0/1) con parámetros (comparaciones y/o regresión logística simple si procede).
+- **H3:** entre pies con motora total normal (≥ 45), conteos y % de positivos sensoriales (< 45) por nervio.
+- **H4:** asociación entre diagnóstico TTS (0/1) y parámetros neurofisiológicos:
 - **Múltiples comparaciones:** corrección BH-FDR.
 - **Salidas:** tablas CSV y figuras PNG en `results/`.
 
-## Requisitos
+## Resultados (archivos)
 
-- Python 3.12+
-- Jupyter Notebook
-- Pandas
-- NumPy
-- Matplotlib
-- Seaborn
-- SciPy
-- Pingouin
-- Statsmodels
+### sumary_qa.md
 
-## Documentación de cada archivo
+En `results/summary_qa.md`. Resumen de QA/validación.
 
 ### analisis_descriptivo_motor_velocidad.csv
 
-Datos estadísticos descriptivos de velocidad motora (total y segmentaria) por lado (dcho/izq) y tiempo (pre/post).
+Datos estadísticos descriptivos de velocidad motora (total y segmentaria) por lado (dcho/izq) y tiempo (pre/post). En `results/tables/analisis_descriptivo_motor_velocidad.csv`.
 
 - count: número de observaciones
 - mean: media
@@ -103,9 +140,11 @@ Datos estadísticos descriptivos de velocidad motora (total y segmentaria) por l
 
 ### falsos_negativos_vel.csv
 
-Conteos y porcentajes de pies con posible falso negativo (velocidad total normal ≥ 45 y velocidad segmentaria patológica < 45) por lado (dcho/izq) y tiempo (pre/post).
+Conteos y porcentajes de pies con posible falso negativo (velocidad total normal ≥ 45 y velocidad segmentaria patológica < 45) por lado (dcho/izq) y tiempo (pre/post). En `results/tables/falsos_negativos_vel.csv`.
 
 ### motora_neg_vs_sensitiva_pos_pre.csv
+
+Conteos y porcentajes de pies con velocidad motora total PRE ≥ 45 (normal) y velocidad sensorial patológica (< 45) por nervio (n. tibial posterior, n. plantar medial, n. plantar lateral). En `results/tables/motora_neg_vs_sensitiva_pos_pre.csv`.
 
 - `n_eligibles_total`: número de pies TTS+ cuya velocidad motora total PRE ≥ 45 (es decir, TTS clínico/diagnóstico positivo pero motora total normal).
 - `n_sens_pos`: número de pies dentro de los elegibles que son positivos sensoriales (< 45) en el nervio.
@@ -116,18 +155,22 @@ Conteos y porcentajes de pies con posible falso negativo (velocidad total normal
 
 ### paired_summary_prepost.csv
 
-Estadísticos descriptivos (n, media, sd, min, Q1, mediana, Q3, max) de las variables neurofisiológicas (velocidad total y segmentaria, amplitud y latencia) por lado (dcho/izq), tipo (motor/sensitivo) y tiempo (pre/post).
+Estadísticos descriptivos (n, media, sd, min, Q1, mediana, Q3, max) de las variables neurofisiológicas (velocidad total y segmentaria, amplitud y latencia) por lado (dcho/izq), tipo (motor/sensitivo) y tiempo (pre/post). En `results/tables/paired_summary_prepost.csv`.
 
 ### porcentajes_valores_faltantes.csv
 
-Porcentaje de valores faltantes (NA) por columna en el dataset ordenado de mayor a menor.
+Porcentaje de valores faltantes (NA) por columna en el dataset ordenado de mayor a menor. En `results/tables/porcentajes_valores_faltantes.csv`.
 
 ### tts_positivos_umbral_pre.csv
 
-Conteos y porcentajes de pies TTS positivos (diagnóstico clínico) con velocidad motora total PRE ≥ 45 (normal) por lado (dcho/izq).
+Conteos y porcentajes de pies TTS positivos (diagnóstico clínico) con velocidad motora total PRE ≥ 45 (normal) por lado (dcho/izq). En `results/tables/tts_positivos_umbral_pre.csv`.
 
-## Dudas
+## Ética y privacidad
 
-- ¿amplitud vs velocidad?
-- ¿misma importancia sensitivo y motor?
-- refinir valores fisiológicos amplitud/velocidad (en config.py)
+- No se incluyen datos identificables.
+- Los datos crudos permanecen locales en data/raw/ (ignorados por git).
+- Cualquier compartición externa debe estar autorizada por el comité correspondiente.
+
+## Licencia
+
+Este proyecto está bajo la licencia MIT. Consulta el archivo LICENSE para más detalles.
